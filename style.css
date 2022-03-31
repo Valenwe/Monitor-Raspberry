@@ -1,0 +1,240 @@
+@font-face {
+   font-family: Blanka;
+   src: url("Blanka-Regular.ttf");
+}
+
+.center {
+   margin-right: auto;
+   margin-left: auto;
+   text-align: center;
+}
+
+.box {
+   border: white solid 1px;
+   width: 61%;
+   border-radius: 10px;
+   padding: 10px;
+   margin-top: 10%;
+}
+
+.error {
+   color: red;
+}
+
+.success {
+   color: beige;
+}
+
+h1,
+h2,
+h3 {
+   color: aqua;
+}
+
+table {
+   margin: 30px;
+}
+
+th {
+   width: 15%;
+}
+
+td,
+tr,
+th,
+span {
+   padding-left: 20px;
+   font-family: "Courier New", Courier, monospace;
+}
+
+span {
+   font-size: 35px;
+}
+
+th {
+   color: yellow;
+}
+
+.hidden {
+   display: none;
+}
+
+form {
+   margin-bottom: auto;
+}
+
+form input {
+   width: 27%;
+}
+
+form input,
+form button {
+   margin: 10px;
+   font-size: large;
+}
+
+img {
+   max-width: 960px;
+   max-height: 540px;
+}
+
+img#feed {
+   border: 3px black solid;
+}
+
+details {
+   overflow: auto;
+   max-height: 100vh;
+   padding: 15px;
+}
+
+a {
+   text-decoration:none; 
+}
+
+/* partie concernant les images de logs */
+
+.unselectable {
+   -webkit-touch-callout: none;
+   -webkit-user-select: none;
+   -khtml-user-select: none;
+   -moz-user-select: none;
+   -ms-user-select: none;
+   user-select: none;
+}
+
+.webcam_log {
+   border-radius: 2%;
+}
+
+/* style global */
+
+body {
+   background-color: black;
+   background-image: radial-gradient(rgba(0, 150, 0, 0.75), black 120%);
+   height: 100vh;
+   margin: 0;
+   padding: 2rem;
+}
+
+body,
+button {
+   color: white;
+   font: 1.3rem "Blanka", monospace;
+   text-shadow: 0 0 8px #c8c8c8;
+}
+
+body::after {
+   content: "";
+   position: absolute;
+   top: 0;
+   left: 0;
+   width: 100vw;
+   height: 100vh;
+   background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15) 1px, transparent 1px, transparent 2px);
+   pointer-events: none;
+}
+
+::selection {
+   background: #0080ff;
+   text-shadow: none;
+}
+
+/* style de bouton */
+
+.draw-border {
+   color: #58afd1;
+   -webkit-box-shadow: inset 0 0 0 4px rgba(0, 90, 0, 0.75);
+   box-shadow: inset 0 0 0 4px rgba(0, 90, 0, 0.75);
+   -webkit-transition: color 0.25s 0.08333s;
+   transition: color 0.25s 0.08333s;
+   position: relative;
+}
+
+.draw-border::before,
+.draw-border::after {
+   border: 0 solid transparent;
+   -webkit-box-sizing: border-box;
+   box-sizing: border-box;
+   content: "";
+   pointer-events: none;
+   position: absolute;
+   width: 0;
+   height: 0;
+   bottom: 0;
+   right: 0;
+}
+
+.draw-border::before {
+   border-bottom-width: 4px;
+   border-left-width: 4px;
+}
+
+.draw-border::after {
+   border-top-width: 4px;
+   border-right-width: 4px;
+}
+
+input.draw-border:hover {
+   color: blue;
+}
+
+button.draw-border:hover {
+   color: #ffe593;
+}
+
+.draw-border:hover::before,
+.draw-border:hover::after {
+   border-color: #ffe593;
+   -webkit-transition: border-color 0s, width 0.25s, height 0.25s;
+   transition: border-color 0s, width 0.25s, height 0.25s;
+   width: 100%;
+   height: 100%;
+}
+
+.draw-border:hover::before {
+   -webkit-transition-delay: 0s, 0s, 0.25s;
+   transition-delay: 0s, 0s, 0.25s;
+}
+
+.draw-border:hover::after {
+   -webkit-transition-delay: 0s, 0.25s, 0s;
+   transition-delay: 0s, 0.25s, 0s;
+}
+
+button {
+   background: none;
+   border: none;
+   cursor: pointer;
+   padding: 10px;
+   letter-spacing: 0.1rem;
+}
+
+button:focus {
+   outline: 0.5px dotted #55dc55;
+   border-radius: 5px;
+}
+
+.red {
+   color: #d15858;
+}
+
+.green {
+   color: #62d158;
+}
+
+.yellow {
+   color: yellow;
+}
+
+.violet {
+   color: mediumvioletred;
+}
+
+.orange {
+   color: orange;
+}
+
+.blue {
+   color: aquamarine;
+}
