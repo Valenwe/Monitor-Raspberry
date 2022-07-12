@@ -62,6 +62,13 @@ try:
 except:
     print("Unable to load alarm sound file")
 
+def refreh_filesize():
+    global current_size_folder_img
+    current_size_folder_img = 0
+    for path, dirs, files in os.walk(os.getcwd()):
+        for f in files:
+            current_size_folder_img += os.path.getsize(os.getcwd() + "/" + f)
+
 def refresh_config(first_time=False):
     try:
         with open(root_folder + "/files/config.json") as file:
@@ -135,6 +142,16 @@ def refresh_config(first_time=False):
     except Exception as e:
         print("Unable to read config file...")
         print(e)
+
+    if first_time:
+        # check path available
+        if not os.path.isdir(img_path):
+            os.mkdir(img_path)
+
+        os.chdir(img_path)
+
+    # refresh the size used for the images
+    refreh_filesize()
 
 
 def save_config(key, value):
@@ -283,11 +300,6 @@ def movement_detected(without_rect, with_rect, last_alert, last_warning, last_de
         cv2.imwrite(title + "_ORIGINAL.jpg", without_rect)
         cv2.imwrite(title + "_COLLIDE.jpg", with_rect)
 
-        current_size_folder_img += os.path.getsize(
-            os.getcwd() + "/" + title + "_ORIGINAL.jpg")
-        current_size_folder_img += os.path.getsize(
-            os.getcwd() + "/" + title + "_COLLIDE.jpg")
-
         # si la dernière alerte s'est déroulée il y a une minute minimum
         if can_alert and webcam_send_email:
             th = threading.Thread(target=alarm, args=("Camera detected movement!",
@@ -303,16 +315,6 @@ def movement_detected(without_rect, with_rect, last_alert, last_warning, last_de
 
 
 refresh_config(first_time=True)
-
-# check path available
-if not os.path.isdir(img_path):
-    os.mkdir(img_path)
-
-os.chdir(img_path)
-
-for path, dirs, files in os.walk(os.getcwd()):
-    for f in files:
-        current_size_folder_img += os.path.getsize(os.getcwd() + "/" + f)
 
 available_ports, working_ports, non_working_ports = list_ports()
 print("Available camera ports:")
