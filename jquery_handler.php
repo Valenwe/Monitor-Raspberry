@@ -151,5 +151,16 @@ if (isset($_POST["name"])) {
                 echo (ping_computer($computer["name"]) == 1 ? "ON" : "OFF");
             } else echo "OFF";
             break;
+
+        case "change_settings":
+            $key = $_POST["key"];
+            $value = $_POST["value"];
+
+            if (in_array($key, array_keys($_SESSION))) {
+                $_SESSION[$key] = $value;
+                save_config();
+            }
+
+            break;
     }
 }

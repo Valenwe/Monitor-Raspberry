@@ -12,6 +12,10 @@ if (isset($_GET["webcam_logs"])) {
     header("location: webcam_logs.php");
 }
 
+if (isset($_GET["webcam_settings"])) {
+    header("location: webcam_settings.php");
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -31,6 +35,9 @@ if (isset($_GET["webcam_logs"])) {
         <button class="draw-border <?php echo ($_SESSION["webcam_capture"] == 0 ? "red" : "green") ?>" id="webcam_capture">Capture <?php echo ($_SESSION["webcam_capture"] == 0 ? "OFF" : "ON") ?></button>
         <button class="draw-border <?php echo ($_SESSION["webcam_motion"] == 0 ? "red" : "green") ?>" id="webcam_motion">Motion Capture <?php echo ($_SESSION["webcam_motion"] == 0 ? "OFF" : "ON") ?></button>
         <button class="draw-border <?php echo ($_SESSION["webcam_send_email"] == 0 ? "red" : "green") ?>" id="webcam_send_email">Alarm <?php echo ($_SESSION["webcam_send_email"] == 0 ? "OFF" : "ON") ?></button>
+        <?php if ($_SESSION["admin_level"] == 1) : ?>
+            <a href="webcam.php?webcam_settings=1"><button class="draw-border yellow">Settings</button></a>
+        <?php endif ?>
         <a href="webcam.php?webcam_logs=1"><button class="draw-border yellow">Detections</button></a>
         <!-- <button class="draw-border yellow" id="toggle_script">Toggle script</button> -->
         <a href="webcam.php?home=1"><button class="draw-border">Back</button></a>

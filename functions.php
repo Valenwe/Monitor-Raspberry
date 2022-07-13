@@ -30,8 +30,7 @@ function recover_config()
 {
     if (!isset($_SESSION["config_loaded"])) {
         $keys_unused = array(
-            "max_size_folder_img", "webcam_port", "gmail_address", "gmail_password",
-            "maximum_detection_wait", "webcam_minimum_square_size", "webcam_resolution"
+            "webcam_port", "gmail_address", "gmail_password", "webcam_resolution"
         );
         // SEUL ENDROIT A MODIFIER
         $config = get_json_content("files/config.json", true);

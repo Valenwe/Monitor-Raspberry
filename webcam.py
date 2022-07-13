@@ -54,6 +54,9 @@ maximum_detection_wait = 60
 global gmail_address
 global gmail_password
 
+global detection_counter
+detection_counter = 0
+
 root_folder = os.getcwd()
 
 try:
@@ -62,12 +65,14 @@ try:
 except:
     print("Unable to load alarm sound file")
 
+
 def refreh_filesize():
     global current_size_folder_img
     current_size_folder_img = 0
     for path, dirs, files in os.walk(os.getcwd()):
         for f in files:
             current_size_folder_img += os.path.getsize(os.getcwd() + "/" + f)
+
 
 def refresh_config(first_time=False):
     try:
@@ -276,9 +281,15 @@ def movement_detected(without_rect, with_rect, last_alert, last_warning, last_de
     global detection_id
     global maximum_detection_wait
     global webcam_send_email
+    global detection_counter
 
-    can_alert = last_alert == -1 or floor(datetime.datetime.now().timestamp() -
-                                          last_alert) > maximum_detection_wait
+    # if last detection is over
+    if floor(datetime.datetime.now().timestamp() -
+             last_alert) > maximum_detection_wait:
+        detection_counter = 0
+
+    can_alert = (last_alert == -1 or floor(datetime.datetime.now().timestamp() -
+                                           last_alert) > maximum_detection_wait) and detection_counter > 1
 
     can_warn = last_warning == -1 or floor(datetime.datetime.now().timestamp() -
                                            last_warning) > maximum_detection_wait
@@ -300,12 +311,15 @@ def movement_detected(without_rect, with_rect, last_alert, last_warning, last_de
         cv2.imwrite(title + "_ORIGINAL.jpg", without_rect)
         cv2.imwrite(title + "_COLLIDE.jpg", with_rect)
 
-        # si la dernière alerte s'est déroulée il y a une minute minimum
+        # si la dernière alerte s'est déroulée il y a une minute minimum et qu'il y a plus d'une frame d'image
         if can_alert and webcam_send_email:
             th = threading.Thread(target=alarm, args=("Camera detected movement!",
-                                                      "The camera detected movement at " + str(datetime.datetime.now()), title + "_ORIGINAL.jpg"))
+                                                      "The camera detected movement at " + str(datetime.datetime.now().strptime(
+                                                          '%d/%m/%Y %H:%M:%S')), title + "_ORIGINAL.jpg"))
             th.start()
             last_alert = datetime.datetime.now().timestamp()
+
+        detection_counter += 1
 
     elif can_warn:
         print("Failed trying to save the detection images. Reached max size")
@@ -377,6 +391,7 @@ if len(working_ports) > 0:
         if not webcam_capture:
             continue
 
+        # now begins all the image analysis
         ret2, frame2 = cam.read()
         frame2_untouched = frame2.copy()
         gray2 = cv2.cvtColor(frame2, cv2.COLOR_BGR2GRAY)
@@ -395,18 +410,18 @@ if len(working_ports) > 0:
 
         cv2.imwrite("feed.jpg", frame2_untouched)
 
-        alert = False
+        squareHighEnough = False
         for i in countour:
-            # if the area detected is bigger than the smallest square size, and smaller than 80% of the webcam screen
-            if cv2.contourArea(i) < webcam_minimum_square_size or cv2.contourArea(i) >= 0.8 * used_width * used_height:
+            # if the area detected is bigger than the smallest square size, and smaller than 70% of the webcam screen
+            if cv2.contourArea(i) < webcam_minimum_square_size or cv2.contourArea(i) >= 0.7 * used_width * used_height:
                 continue
 
-            alert = True
+            squareHighEnough = True
             (x, y, w, h) = cv2.boundingRect(i)
             cv2.rectangle(frame2, (x, y), (x + w, y + h), (255, 0, 0), 2)
 
         # detected
-        if alert and webcam_motion:
+        if squareHighEnough and webcam_motion:
             last_alert, last_warning, last_detection = movement_detected(
                 frame2_untouched, frame2, last_alert, last_warning, last_detection)
 
