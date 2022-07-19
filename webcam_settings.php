@@ -28,7 +28,8 @@ if (isset($_GET["webcam"]) || $_SESSION["admin_level"] != 1) {
 
 
         <?php
-        $not_to_show = array("username", "admin_level", "config_loaded", "json_path", "img_path");
+        $not_to_show = array("username", "admin_level", "config_loaded", "json_path", "img_path",
+    "webcam_capture", "webcam_motion", "webcam_send_email");
         foreach ($_SESSION as $key => $value) {
             if (in_array($key, $not_to_show)) continue;
             echo "<div>\n";

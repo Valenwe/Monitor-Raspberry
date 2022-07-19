@@ -173,7 +173,7 @@ def save_config(key, value):
         pass
 
 
-def alarm(subject, content, file):
+def alarm(subject, content, files):
     global json_path
     global gmail_address
     global gmail_password
@@ -190,13 +190,14 @@ def alarm(subject, content, file):
         message['Subject'] = subject
 
         # file attachement
-        attachment = open(file, 'rb')
-        obj = MIMEBase('application', 'octet-stream')
-        obj.set_payload((attachment).read())
-        encoders.encode_base64(obj)
-        obj.add_header('Content-Disposition',
-                       "attachment; filename= " + os.path.basename(file))
-        message.attach(obj)
+        for file in files:
+            attachment = open(file, 'rb')
+            obj = MIMEBase('application', 'octet-stream')
+            obj.set_payload((attachment).read())
+            encoders.encode_base64(obj)
+            obj.add_header('Content-Disposition',
+                           "attachment; filename= " + os.path.basename(file))
+            message.attach(obj)
 
         # body
         plain_text = MIMEText(content, _subtype='plain', _charset='UTF-8')
@@ -283,13 +284,8 @@ def movement_detected(without_rect, with_rect, last_alert, last_warning, last_de
     global webcam_send_email
     global detection_counter
 
-    # if last detection is over
-    if floor(datetime.datetime.now().timestamp() -
-             last_alert) > maximum_detection_wait:
-        detection_counter = 0
-
-    can_alert = (last_alert == -1 or floor(datetime.datetime.now().timestamp() -
-                                           last_alert) > maximum_detection_wait) and detection_counter > 1
+    can_alert = last_alert == -1 or floor(datetime.datetime.now().timestamp() -
+                                          last_alert) > maximum_detection_wait
 
     can_warn = last_warning == -1 or floor(datetime.datetime.now().timestamp() -
                                            last_warning) > maximum_detection_wait
@@ -305,6 +301,9 @@ def movement_detected(without_rect, with_rect, last_alert, last_warning, last_de
             detection_id += 1
             save_config("detection_id", detection_id)
 
+            # on remet à 0 le compteur de frame
+            detection_counter = 0
+
         last_detection = datetime.datetime.now().timestamp()
         title = str(detection_id) + \
             "_{:%Y%m%d_%H%M%S}".format(datetime.datetime.now())
@@ -312,10 +311,10 @@ def movement_detected(without_rect, with_rect, last_alert, last_warning, last_de
         cv2.imwrite(title + "_COLLIDE.jpg", with_rect)
 
         # si la dernière alerte s'est déroulée il y a une minute minimum et qu'il y a plus d'une frame d'image
-        if can_alert and webcam_send_email:
+        if can_alert and webcam_send_email and detection_counter >= 2:
             th = threading.Thread(target=alarm, args=("Camera detected movement!",
-                                                      "The camera detected movement at " + str(datetime.datetime.now().strptime(
-                                                          '%d/%m/%Y %H:%M:%S')), title + "_ORIGINAL.jpg"))
+                                                      "The camera detected movement at " + datetime.datetime.now().strftime(
+                                                          '%d/%m/%Y %H:%M:%S'), [title + "_ORIGINAL.jpg", title + "_COLLIDE.jpg"]))
             th.start()
             last_alert = datetime.datetime.now().timestamp()
 
