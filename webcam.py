@@ -1,3 +1,5 @@
+from email.mime import image
+from pickletools import optimize
 import cv2
 import os
 import datetime
@@ -11,9 +13,10 @@ import json
 import time
 from pygame import mixer
 from math import floor
+from PIL import Image
 
 # variables
-display = False
+display = True
 
 global webcam_motion
 webcam_motion = False
@@ -56,6 +59,9 @@ global gmail_password
 
 global detection_counter
 detection_counter = 0
+
+global array_rectangle
+array_rectangle = []
 
 root_folder = os.getcwd()
 
@@ -173,7 +179,7 @@ def save_config(key, value):
         pass
 
 
-def alarm(subject, content, files):
+def send_alarm_email(subject, content, files):
     global json_path
     global gmail_address
     global gmail_password
@@ -200,6 +206,10 @@ def alarm(subject, content, files):
             message.attach(obj)
 
         # body
+        global array_rectangle
+        for elem in array_rectangle:
+            content += " " + elem
+
         plain_text = MIMEText(content, _subtype='plain', _charset='UTF-8')
         message.attach(plain_text)
 
@@ -284,6 +294,8 @@ def movement_detected(without_rect, with_rect, last_alert, last_warning, last_de
     global webcam_send_email
     global detection_counter
 
+    # print("detection counter : " + str(detection_counter))
+
     can_alert = last_alert == -1 or floor(datetime.datetime.now().timestamp() -
                                           last_alert) > maximum_detection_wait
 
@@ -297,6 +309,9 @@ def movement_detected(without_rect, with_rect, last_alert, last_warning, last_de
 
         # si la dernière détection date de plus de 1min
         if can_detect_new_one:
+            # on crée un gif des images précédentes
+            imgs_to_gif(detection_id)
+
             # on ajoute +1 au detection_id pour la prochaine série
             detection_id += 1
             save_config("detection_id", detection_id)
@@ -311,10 +326,12 @@ def movement_detected(without_rect, with_rect, last_alert, last_warning, last_de
         cv2.imwrite(title + "_COLLIDE.jpg", with_rect)
 
         # si la dernière alerte s'est déroulée il y a une minute minimum et qu'il y a plus d'une frame d'image
-        if can_alert and webcam_send_email and detection_counter >= 2:
-            th = threading.Thread(target=alarm, args=("Camera detected movement!",
-                                                      "The camera detected movement at " + datetime.datetime.now().strftime(
-                                                          '%d/%m/%Y %H:%M:%S'), [title + "_ORIGINAL.jpg", title + "_COLLIDE.jpg"]))
+        if can_alert and webcam_send_email and detection_counter >= 30:
+            # print("Email sent")
+
+            th = threading.Thread(target=send_alarm_email, args=("Camera detected movement!",
+                                                                 "The camera detected movement at " + datetime.datetime.now().strftime(
+                                                                     '%d/%m/%Y %H:%M:%S'), [title + "_ORIGINAL.jpg", title + "_COLLIDE.jpg"]))
             th.start()
             last_alert = datetime.datetime.now().timestamp()
 
@@ -325,6 +342,24 @@ def movement_detected(without_rect, with_rect, last_alert, last_warning, last_de
         last_warning = datetime.datetime.now().timestamp()
 
     return last_alert, last_warning, last_detection
+
+
+def imgs_to_gif(detection_id):
+    files = [name for name in os.listdir(img_path) if os.path.isfile(
+        name) and name.startswith(str(detection_id))]
+    # print(files, len(files))
+
+    date_str = files[0].split("_")[1] + "_" + files[0].split("_")[2]
+
+    images = []
+    for image_path in files:
+        images.append(Image.open(image_path))
+
+    images[0].save(str(detection_id) + "_" + date_str + ".gif", save_all=True,
+                   append_images=images[1:], optimize=True, duration=400, loop=0)
+
+    for image_path in files:
+        os.remove(image_path)
 
 
 refresh_config(first_time=True)
@@ -410,14 +445,16 @@ if len(working_ports) > 0:
         cv2.imwrite("feed.jpg", frame2_untouched)
 
         squareHighEnough = False
+        array_rectangle = []
         for i in countour:
             # if the area detected is bigger than the smallest square size, and smaller than 70% of the webcam screen
-            if cv2.contourArea(i) < webcam_minimum_square_size or cv2.contourArea(i) >= 0.7 * used_width * used_height:
-                continue
+            if cv2.contourArea(i) >= webcam_minimum_square_size and cv2.contourArea(i) < 0.7 * used_width * used_height:
+                squareHighEnough = True
+                (x, y, w, h) = cv2.boundingRect(i)
+                cv2.rectangle(frame2, (x, y), (x + w, y + h), (255, 0, 0), 2)
 
-            squareHighEnough = True
-            (x, y, w, h) = cv2.boundingRect(i)
-            cv2.rectangle(frame2, (x, y), (x + w, y + h), (255, 0, 0), 2)
+                array_rectangle.append(
+                    str(cv2.contourArea(i)) + " " + str(x) + " " + str(y))
 
         # detected
         if squareHighEnough and webcam_motion:

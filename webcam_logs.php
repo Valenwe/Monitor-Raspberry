@@ -13,7 +13,7 @@ if (isset($_GET["webcam"])) {
 
 $images = glob(dirname($_SERVER['SCRIPT_FILENAME']) . "/" . $_SESSION["img_path"] . "/*");
 $images = array_filter($images, function ($file) {
-    return is_file($file) && strpos($file, "feed.jpg") === false;
+    return is_file($file) && strpos($file, "feed.jpg") === false && str_ends_with($file, ".gif");
 });
 
 usort($images, function ($a, $b) {
@@ -101,11 +101,6 @@ cwIDAQAB
             $("html, body").animate({
                 scrollTop: $(this).offset().top
             }, 500);
-        });
-
-        $("button#view_log").on("click", function() {
-            let id = $(this).parent().parent().attr("id");
-            window.location.href = "video.php?id=" + id;
         });
 
         $("button#delete_log").on("click", function() {

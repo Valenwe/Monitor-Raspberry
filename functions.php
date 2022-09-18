@@ -281,30 +281,8 @@ function echo_images($images)
                 substr($img_no_id, 9, 2) . ":" . substr($img_no_id, 11, 2) . ":" . substr($img_no_id, 13, 2);
 
             echo "<details id='" . $detection_id . "'> <summary class='unselectable' style='cursor: pointer; color: red'>" . (new DateTime($date))->format("d M Y | H:i:s") .
-                " <button class='draw-border violet' title='Delete' id='delete_log'>X</button> " .
-                " <button class='draw-border blue' title='View video' id='view_log'>⟹</button>" . "</summary>";
-
-            $used_imgs = array();
-            for ($I = $i; $I < count($images); $I++) {
-                $img2 = basename($images[$I]);
-                $detection_id2 = explode("_", $img2)[0];
-                $img_no_id = explode("_", $img2)[1] . "_" . explode("_", $img2)[2];
-
-                // si même série de détections
-                if ($detection_id == $detection_id2 && array_search($img_no_id, $used_imgs) === false) {
-                    $date = substr($img_no_id, 4, 2) . "/" . substr($img_no_id, 6, 2) . "/" . substr($img_no_id, 0, 4) . " " .
-                        substr($img_no_id, 9, 2) . ":" . substr($img_no_id, 11, 2) . ":" . substr($img_no_id, 13, 2);
-
-                    $original = $_SESSION["img_path"] . "/" . str_replace("_COLLIDE", "_ORIGINAL", $img2);
-                    $collide = $_SESSION["img_path"] . "/" . str_replace("_ORIGINAL", "_COLLIDE", $img2);
-
-                    array_push($used_imgs, $img_no_id);
-
-                    echo "<img class='webcam_log' title='" . (new DateTime($date))->format("d M Y | H:i:s") . "' onmouseover='this.src=" . '"' .
-                        $collide . '"' . "' onmouseout='this.src=" . '"' .  $original .  '"' . "' src='$original'>";
-                }
-            }
-
+                " <button class='draw-border violet' title='Delete' id='delete_log'>X</button> " . "</summary>";
+            echo "<img class='webcam_log' src='" . $_SESSION['img_path'] . "/$img'>";
             echo "</details>";
             $has_detected = True;
             $i++;
