@@ -1,5 +1,3 @@
-from email.mime import image
-from pickletools import optimize
 import cv2
 import os
 import datetime
@@ -16,7 +14,7 @@ from math import floor
 from PIL import Image
 
 # variables
-display = True
+display = False
 
 global webcam_motion
 webcam_motion = False
@@ -50,6 +48,9 @@ detection_id = 1
 
 global webcam_minimum_square_size
 webcam_minimum_square_size = 75
+
+global webcam_minimum_nb_detection
+webcam_minimum_nb_detection = 30
 
 global maximum_detection_wait
 maximum_detection_wait = 60
@@ -133,6 +134,14 @@ def refresh_config(first_time=False):
         try:
             if int(data["maximum_detection_wait"]) > 0:
                 maximum_detection_wait = int(data["maximum_detection_wait"])
+        except:
+            pass
+
+        global webcam_minimum_nb_detection
+        try:
+            if (int(data["webcam_minimum_nb_detection"]) > 0):
+                webcam_minimum_nb_detection = int(
+                    data["webcam_minimum_nb_detection"])
         except:
             pass
 
@@ -294,7 +303,8 @@ def movement_detected(without_rect, with_rect, last_alert, last_warning, last_de
     global webcam_send_email
     global detection_counter
 
-    # print("detection counter : " + str(detection_counter))
+    if display:
+        print("detection counter : " + str(detection_counter))
 
     can_alert = last_alert == -1 or floor(datetime.datetime.now().timestamp() -
                                           last_alert) > maximum_detection_wait
@@ -310,7 +320,7 @@ def movement_detected(without_rect, with_rect, last_alert, last_warning, last_de
         # si la dernière détection date de plus de 1min
         if can_detect_new_one:
             # on crée un gif des images précédentes
-            imgs_to_gif(detection_id)
+            process_images(detection_id, detection_counter)
 
             # on ajoute +1 au detection_id pour la prochaine série
             detection_id += 1
@@ -322,12 +332,15 @@ def movement_detected(without_rect, with_rect, last_alert, last_warning, last_de
         last_detection = datetime.datetime.now().timestamp()
         title = str(detection_id) + \
             "_{:%Y%m%d_%H%M%S}".format(datetime.datetime.now())
-        cv2.imwrite(title + "_ORIGINAL.jpg", without_rect)
-        cv2.imwrite(title + "_COLLIDE.jpg", with_rect)
+        cv2.imwrite(title + "_" + str(detection_counter) +
+                    "_ORIGINAL.jpg", without_rect)
+        cv2.imwrite(title + "_" + str(detection_counter) +
+                    "_COLLIDE.jpg", with_rect)
 
         # si la dernière alerte s'est déroulée il y a une minute minimum et qu'il y a plus d'une frame d'image
-        if can_alert and webcam_send_email and detection_counter >= 30:
-            # print("Email sent")
+        if can_alert and webcam_send_email and detection_counter >= webcam_minimum_nb_detection:
+            if display:
+                print("Email sent")
 
             th = threading.Thread(target=send_alarm_email, args=("Camera detected movement!",
                                                                  "The camera detected movement at " + datetime.datetime.now().strftime(
@@ -344,19 +357,24 @@ def movement_detected(without_rect, with_rect, last_alert, last_warning, last_de
     return last_alert, last_warning, last_detection
 
 
-def imgs_to_gif(detection_id):
+def process_images(detection_id, detection_counter):
+    global webcam_minimum_nb_detection
     files = [name for name in os.listdir(img_path) if os.path.isfile(
         name) and name.startswith(str(detection_id))]
-    # print(files, len(files))
 
-    date_str = files[0].split("_")[1] + "_" + files[0].split("_")[2]
+    if display:
+        print(files, len(files))
 
-    images = []
-    for image_path in files:
-        images.append(Image.open(image_path))
+    # save only if we have enough detections
+    if detection_counter >= webcam_minimum_nb_detection:
+        date_str = files[0].split("_")[1] + "_" + files[0].split("_")[2]
+        images = []
 
-    images[0].save(str(detection_id) + "_" + date_str + ".gif", save_all=True,
-                   append_images=images[1:], optimize=True, duration=400, loop=0)
+        for image_path in files:
+            images.append(Image.open(image_path))
+
+        images[0].save(str(detection_id) + "_" + date_str + ".gif", save_all=True,
+                        append_images=images[1:], optimize=True, duration=400, loop=0)
 
     for image_path in files:
         os.remove(image_path)
