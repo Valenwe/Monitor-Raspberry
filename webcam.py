@@ -367,14 +367,23 @@ def process_images(detection_id, detection_counter):
 
     # save only if we have enough detections
     if detection_counter >= webcam_minimum_nb_detection:
-        date_str = files[0].split("_")[1] + "_" + files[0].split("_")[2]
-        images = []
+        # couper s'il y a trop de détections (247 -> nb_100 = 3)
+        nb_100 = int(len(files) / 100) + 1
+        for index_100 in range(0, nb_100):
+            date_str = files[0].split("_")[1] + "_" + files[0].split("_")[2]
+            images = []
 
-        for image_path in files:
-            images.append(Image.open(image_path))
+            a = index_100 * 100
+            b = (index_100 + 1) * 100 + 1
+            if b > len(files):
+                b = len(files)
 
-        images[0].save(str(detection_id) + "_" + date_str + ".gif", save_all=True,
-                        append_images=images[1:], optimize=True, duration=400, loop=0)
+            for i in range(a, b):
+                image_path = files[i]
+                images.append(Image.open(image_path))
+
+            images[0].save("{a}.{b}_{c}.gif".format(a=detection_id, b=index_100, c=date_str), save_all=True,
+                            append_images=images[1:], optimize=True, duration=400, loop=0)
 
     for image_path in files:
         os.remove(image_path)
@@ -487,7 +496,7 @@ if len(working_ports) > 0:
 
         frame1 = frame2
         gray1 = gray2
-        time.sleep(0.05)
+        time.sleep(0.2)
 
     cam.release()
 
